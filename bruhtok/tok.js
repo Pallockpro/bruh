@@ -179,11 +179,12 @@ const yt = {
 function sourcesFor(item) {
   const id = item.id, out = [];
   if (item.kind === "tt") {
-    for (const b of S.tikwm) {
-      out.push({ group: "Plays here", label: `tikwm: ${host(b)}`, native: true,
+    // tikwm's relay links redirect to a fresh copy of the clip on TikTok's servers (checked by scripts/probe.mjs).
+    for (const b of S.tikwm.length ? S.tikwm : ["https://www.tikwm.com"]) {
+      out.push({ group: "Plays here", label: `tikwm: ${host(b)}`, native: true, resolve: async () => ({ mp4: `${b}/video/media/play/${id}.mp4` }) });
+      out.push({ group: "Plays here", label: `tikwm HD: ${host(b)}`, native: true, resolve: async () => ({ mp4: `${b}/video/media/hdplay/${id}.mp4` }) });
+      out.push({ group: "Plays here", label: `tikwm lookup: ${host(b)}`, native: true,
         resolve: async () => ({ mp4: item.play && item.playBase === b ? item.play : (await tt.one(id)).play }) });
-      out.push({ group: "Plays here", label: `tikwm relay: ${host(b)}`, native: true,
-        resolve: async () => ({ mp4: `${b}/video/media/play/${id}.mp4` }) });
     }
     out.push(
       { group: "TikTok players", label: "TikTok player", url: `https://www.tiktok.com/player/v1/${id}?autoplay=1&loop=1&music_info=1&description=1&rel=0` },

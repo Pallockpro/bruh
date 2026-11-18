@@ -34,12 +34,15 @@ A swipeable vertical feed with a **TikTok** tab and a **Shorts** tab. For You fe
 
 | Service | For |
 | --- | --- |
-| [tikwm](https://www.tikwm.com) API | TikTok For You feed, search, accounts, watermark-free files that play in bruhtok's own player |
+| [tikwm](https://www.tikwm.com) API | TikTok For You feed and watermark-free video files (via its relay links) that play in bruhtok's own player. Its search is behind Cloudflare, so search falls back to the clip pool. |
+| Clip pool (`bruhtok/feed.json`) | ~250 TikToks gathered every 6 hours by the GitHub Action from tikwm's feed and TikTok's creator embeds; used for search, accounts, and when the live feed is down |
 | TikTok embed players | official `player/v1` and classic `embed/v2` players |
 | [ProxiTok](https://github.com/pablouser1/ProxiTok) | open-source TikTok front-end; each server streams the clip through itself |
 | Piped / Invidious | YouTube Shorts: search, proxied playback and embed players |
 
 Tap **Source** on any clip to pick where it plays from.
+
+If a source stops working, run **Probe sources** from the Actions tab: it prints exactly how every source answers.
 
 ## Auto-updating
 

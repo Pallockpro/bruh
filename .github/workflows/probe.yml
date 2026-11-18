@@ -1,10 +1,8 @@
 name: Probe sources
 
+# Run by hand from the Actions tab to see how every source answers from GitHub's servers.
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - scripts/probe.mjs
 
 jobs:
   probe:
