@@ -26,7 +26,7 @@ async function get(url, type = "json") {
 
 // Known piped.video mirrors (from the Piped README); dead ones get dropped by the check.
 const PIPED_FRONTENDS = [
-  "https://piped.video", "https://cf.piped.video", "https://vc.piped.video", "https://re.piped.video",
+  "https://piped.ducks.party", "https://piped.private.coffee", "https://piped.video", "https://cf.piped.video", "https://vc.piped.video", "https://re.piped.video",
   "https://fl.piped.video", "https://do.piped.video", "https://nf.piped.video", "https://az.piped.video",
 ];
 const TEST_ID = "jNQXAC9IVRw"; // "Me at the zoo", the first YouTube video
@@ -138,7 +138,8 @@ const next = {
 };
 next.pipedFrontends = await refreshEmbeds("piped",
   [...PIPED_FRONTENDS, ...frontendGuesses([...pipedApiCandidates, ...next.piped])], old.pipedFrontends || []);
-next.invidiousEmbed = await refreshEmbeds("invidious", invCandidates, old.invidiousEmbed || []);
+next.invidiousEmbed = await refreshEmbeds("invidious",
+  [...invCandidates, ...next.invidious, "https://invidious.ducks.party"], old.invidiousEmbed || []);
 
 const same = (a, b) => [...a].sort().join() === [...(b || [])].sort().join();
 if (Object.keys(next).every((k) => same(next[k], old[k]))) {
