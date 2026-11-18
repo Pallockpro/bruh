@@ -13,5 +13,22 @@
     "https://invidious.nerdvpn.de",
     "https://invidious.f5.si",
     "https://inv.tux.pizza"
+  ],
+  "pipedFrontends": [
+    "https://piped.video",
+    "https://cf.piped.video",
+    "https://vc.piped.video",
+    "https://re.piped.video",
+    "https://fl.piped.video",
+    "https://do.piped.video",
+    "https://nf.piped.video",
+    "https://az.piped.video"
+  ],
+  "invidiousEmbed": [
+    "https://inv.nadeko.net",
+    "https://yewtu.be",
+    "https://invidious.nerdvpn.de",
+    "https://invidious.f5.si",
+    "https://inv.tux.pizza"
   ]
 }

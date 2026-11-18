@@ -5,24 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>bruhtube</title>
 <link rel="stylesheet" href="style.css">
+<script>
+  try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>
 </head>
 <body>
-<header class="top">
-  <a class="mark" href="#/">bruh<b>tube</b></a>
+<header class="bar">
+  <div class="bar-l">
+    <button class="ib" id="menu" aria-label="Menu"></button>
+    <a class="logo" href="#/" aria-label="bruhtube home"><span class="logo-mark">b</span>bruhtube</a>
+  </div>
   <form id="search" role="search">
-    <input id="q" name="q" placeholder="search or paste a youtube link" autocomplete="off" spellcheck="false">
-    <button>search</button>
+    <input id="q" placeholder="Search or paste a YouTube link" autocomplete="off" spellcheck="false">
+    <button id="go" aria-label="Search"></button>
   </form>
-  <nav id="nav"></nav>
+  <div class="bar-r">
+    <button class="ib" id="theme" aria-label="Toggle theme"></button>
+  </div>
 </header>
 
-<main id="view"></main>
-
-<footer class="foot">
-  <span id="servers">loading server list…</span>
-  <a href="#/about">how this works</a>
-  <a href="https://github.com/Pallockpro/bruh">source</a>
-</footer>
+<div class="shell">
+  <nav class="side" id="side"></nav>
+  <div class="scrim" id="scrim"></div>
+  <main id="view"></main>
+</div>
 
 <script src="app.js"></script>
 </body>

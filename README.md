@@ -12,9 +12,20 @@ A YouTube front-end that runs entirely on GitHub Pages, with no server of its ow
 | [Return YouTube Dislike](https://returnyoutubedislike.com) | like/dislike counts |
 | [noembed](https://noembed.com) | title fallback |
 
-Video plays in a normal `<video>` tag streamed through a Piped or Invidious server. If one fails, the page automatically moves to the next server, then to the Invidious and YouTube no-cookie embeds. You can also choose the source under the video.
+## Video sources
 
-The site has pages for Home (trending + categories), categories, search, watch, and **About**, which explains how this works and compares other YouTube proxies (Invidious, Piped, FreeTube, NewPipe/LibreTube, Ultraviolet-style web proxies).
+The **Source** menu under every video has four groups:
+
+- **Plays here (proxied)**: every working Piped and Invidious API server. The video file is streamed through that server into bruhtube's own player (SponsorBlock skipping works here). If one fails, the next is tried automatically.
+- **YouTube players**: YouTube's embed, with and without cookies.
+- **Piped players**: piped.video and its mirrors (cf., vc., re., fl., do., nf., az.) plus other Piped sites, each with its own embedded player.
+- **Invidious players**: each Invidious server's embedded player, streaming through that server.
+
+Next to the menu: a button that jumps to the next source, and one that opens the current source in a new tab. Your last pick is remembered.
+
+## Pages
+
+Home (trending + category shelves), Trending, History (saved in your browser only), 8 categories, search, channel pages, watch, and **About**, which explains how this works and compares other YouTube proxies (Invidious, Piped, FreeTube, NewPipe/LibreTube, Materialious, Ultraviolet-style web proxies). Light and dark themes, works on phones.
 
 ## Auto-updating
 
@@ -22,7 +33,8 @@ The site has pages for Home (trending + categories), categories, search, watch, 
 
 1. pulls the public Piped and Invidious server lists,
 2. checks that each server answers a search **and** allows browser requests (CORS),
-3. keeps the 10 fastest of each and commits them to `instances.json` if the list changed.
+3. checks which Piped websites and Invidious servers have an embed player that loads and may be shown inside another site,
+4. commits the working ones to `instances.json` if anything changed.
 
 ## Turning it on
 
