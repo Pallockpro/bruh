@@ -1,8 +1,8 @@
 {
-  "updated": "2026-11-18T14:24:34.464Z",
+  "updated": "2026-11-18T14:34:35.576Z",
   "piped": [
-    "https://api.piped.private.coffee",
-    "https://pipedapi.ducks.party"
+    "https://pipedapi.ducks.party",
+    "https://api.piped.private.coffee"
   ],
   "invidious": [
     "https://yt.chocolatemoo53.com"
@@ -12,12 +12,8 @@
     "https://piped.private.coffee",
     "https://piped.video",
     "https://cf.piped.video",
-    "https://vc.piped.video",
-    "https://re.piped.video",
-    "https://fl.piped.video",
     "https://do.piped.video",
-    "https://nf.piped.video",
-    "https://az.piped.video"
+    "https://piped.kavin.rocks"
   ],
   "invidiousEmbed": [
     "https://yt.chocolatemoo53.com",
