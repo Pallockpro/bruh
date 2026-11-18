@@ -409,7 +409,7 @@ function watch(token, id) {
   page("watch");
   view.innerHTML = `<div class="watch">
     <div class="primary">
-      <div class="stage"><video controls playsinline autoplay></video><iframe hidden allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe><div class="msg"></div></div>
+      <div class="stage"><video controls playsinline autoplay></video><iframe hidden allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="msg"></div></div>
       <h1 id="vt">Loading…</h1>
       <div class="owner">
         <div class="chan" id="chan"></div>

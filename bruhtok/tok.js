@@ -306,7 +306,7 @@ function feed(token, items, more, start = 0) {
       const f = document.createElement("iframe");
       f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
       f.allowFullscreen = true;
-      f.referrerPolicy = "no-referrer";
+      f.referrerPolicy = "strict-origin-when-cross-origin";
       f.src = s.url;
       clip.prepend(f);
       $(".snd", el).hidden = true;
