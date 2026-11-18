@@ -1,17 +1,10 @@
 {
-  "updated": null,
+  "updated": "2026-11-18T14:24:34.464Z",
   "piped": [
-    "https://pipedapi.kavin.rocks",
-    "https://pipedapi.leptons.xyz",
-    "https://pipedapi.nosebs.ru",
-    "https://pipedapi-libre.kavin.rocks",
-    "https://piped-api.privacy.com.de"
+    "https://api.piped.private.coffee",
+    "https://pipedapi.ducks.party"
   ],
   "invidious": [
-    "https://inv.nadeko.net",
-    "https://yewtu.be",
-    "https://invidious.nerdvpn.de",
-    "https://invidious.f5.si",
-    "https://inv.tux.pizza"
+    "https://yt.chocolatemoo53.com"
   ]
 }
