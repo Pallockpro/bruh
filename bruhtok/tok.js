@@ -30,7 +30,8 @@ const SHORTS_QUERIES = ["funny #shorts", "satisfying #shorts", "animals #shorts"
   "music #shorts", "gaming #shorts", "science #shorts", "art #shorts", "skate #shorts", "comedy #shorts", "dance #shorts"];
 
 const S = {
-  piped: [], invidious: [], pipedFrontends: [], invidiousEmbed: [], ytFrontends: [], proxitok: [], tikwm: [],
+  piped: [], invidious: [], pipedStreams: [], invidiousStreams: [], pipedFrontends: [], invidiousEmbed: [],
+  ytFrontends: [], ytChallenge: [], proxitok: [], tikwm: [], pool: [],
   route: 0, cleanup: null, muted: true, cache: {},
 };
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -117,6 +118,19 @@ const tt = {
   },
 };
 
+// Clip pool gathered by the GitHub Action (bruhtok/feed.json): used when tikwm's live
+// feed or search can't be reached, and for searching captions and accounts.
+function fromPool(i) {
+  return { kind: "tt", id: String(i.id), desc: i.desc || "", author: i.author || i.user, user: i.user, avatar: i.avatar,
+    cover: i.cover, likes: i.likes, comments: i.comments, shares: i.shares, music: i.music || "" };
+}
+function poolSearch(q) {
+  const terms = q.toLowerCase().replace(/^[@#]/, "").split(/\s+/).filter(Boolean);
+  const text = (i) => `${i.desc} ${i.author} ${i.user} ${i.music}`.toLowerCase();
+  const all = S.pool.filter((i) => terms.every((t) => text(i).includes(t)));
+  return all.length ? all : S.pool.filter((i) => terms.some((t) => text(i).includes(t)));
+}
+
 /* ---------- data: YouTube Shorts via Piped / Invidious ---------- */
 
 const shortCover = (id, fallback) => [`https://i.ytimg.com/vi/${id}/oar2.jpg`, fallback || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`];
@@ -165,23 +179,29 @@ const yt = {
 function sourcesFor(item) {
   const id = item.id, out = [];
   if (item.kind === "tt") {
-    for (const b of S.tikwm) out.push({ group: "Plays here", label: `tikwm: ${host(b)}`, native: true,
-      resolve: async () => ({ mp4: item.play && item.playBase === b ? item.play : (await tt.one(id)).play }) });
+    for (const b of S.tikwm) {
+      out.push({ group: "Plays here", label: `tikwm: ${host(b)}`, native: true,
+        resolve: async () => ({ mp4: item.play && item.playBase === b ? item.play : (await tt.one(id)).play }) });
+      out.push({ group: "Plays here", label: `tikwm relay: ${host(b)}`, native: true,
+        resolve: async () => ({ mp4: `${b}/video/media/play/${id}.mp4` }) });
+    }
     out.push(
       { group: "TikTok players", label: "TikTok player", url: `https://www.tiktok.com/player/v1/${id}?autoplay=1&loop=1&music_info=1&description=1&rel=0` },
       { group: "TikTok players", label: "TikTok embed (classic)", url: `https://www.tiktok.com/embed/v2/${id}` },
     );
     for (const b of S.proxitok) out.push({ group: "ProxiTok", label: `ProxiTok: ${host(b)}`, url: `${b}/@${encodeURIComponent(item.user || "placeholder")}/video/${id}` });
   } else {
-    for (const b of S.piped) out.push({ group: "Plays here", label: `Piped API: ${host(b)}`, native: true, resolve: () => yt.stream("piped", b, id) });
-    for (const b of S.invidious) out.push({ group: "Plays here", label: `Invidious API: ${host(b)}`, native: true, resolve: () => yt.stream("invidious", b, id) });
+    for (const b of S.pipedStreams) out.push({ group: "Plays here", label: `Piped API: ${host(b)}`, native: true, resolve: () => yt.stream("piped", b, id) });
+    for (const b of S.invidiousStreams) out.push({ group: "Plays here", label: `Invidious API: ${host(b)}`, native: true, resolve: () => yt.stream("invidious", b, id) });
     out.push(
       { group: "YouTube players", label: "YouTube (no-cookie)", url: `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&rel=0&playsinline=1` },
       { group: "YouTube players", label: "YouTube (standard)", url: `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&rel=0&playsinline=1` },
     );
     for (const f of S.pipedFrontends) out.push({ group: "Piped players", label: `Piped: ${host(f)}`, url: `${f}/embed/${id}?autoplay=1` });
-    for (const b of new Set([...S.invidiousEmbed, ...S.invidious])) out.push({ group: "Invidious players", label: `Invidious: ${host(b)}`, url: `${b}/embed/${id}?autoplay=1&local=true` });
+    for (const b of S.invidiousEmbed) out.push({ group: "Invidious players", label: `Invidious: ${host(b)}`, url: `${b}/embed/${id}?autoplay=1&local=true` });
     for (const f of S.ytFrontends) out.push({ group: "Other front-ends", label: host(f), url: `${f}/watch?v=${id}` });
+    for (const f of S.ytChallenge) out.push({ group: "May ask you to verify first", label: host(f),
+      url: `${f}/${/invidious|inv\.|yewtu/.test(f) ? "embed/" + id : "watch?v=" + id}` });
   }
   return out;
 }
@@ -409,19 +429,36 @@ $("#sheetx").onclick = () => { $("#sheet").hidden = true; };
 /* ---------- feed providers ---------- */
 
 function forYouMore() {
-  if (mode() === "tiktok") return () => tt.feed();
+  if (mode() === "tiktok") {
+    let usePool = !S.tikwm.length, k = 0;
+    const order = shuffle(S.pool.slice());
+    return async () => {
+      if (!usePool) { try { return await tt.feed(); } catch { usePool = true; } }
+      const page = order.slice(k, k + 10);
+      k += 10;
+      return page.length ? page : null;
+    };
+  }
   const qs = shuffle(SHORTS_QUERIES.slice());
   let n = 0;
   return async () => (n < qs.length ? shuffle(await yt.search(qs[n++])) : null);
 }
 function searchMore(q) {
   if (mode() === "tiktok") {
-    let cursor = 0, more = true;
+    if (q === "_pool") { let first = true; return async () => (first ? (first = false, shuffle(S.pool.slice()).slice(0, 48)) : null); }
+    let cursor = 0, more = !!S.tikwm.length, local = false;
     return async () => {
-      if (!more) return null;
-      const r = await tt.search(q, cursor);
-      cursor = r.cursor; more = !!r.more;
-      return r.items;
+      if (local) return null;
+      if (more) {
+        try {
+          const r = await tt.search(q, cursor);
+          cursor = r.cursor; more = !!r.more;
+          if (r.items.length) return r.items;
+        } catch {}
+      }
+      // tikwm search is often blocked; search the clip pool instead.
+      local = true;
+      return poolSearch(q);
     };
   }
   let first = true;
@@ -446,7 +483,7 @@ function chrome(page) {
     store("theme", t);
     chrome(page);
   };
-  $("#foot").innerHTML = `${S.tikwm.length ? "tikwm online" : "tikwm offline"} · ${S.proxitok.length} ProxiTok · ${S.piped.length + S.invidious.length} YouTube servers<br><a href="https://github.com/Pallockpro/bruh">Source on GitHub</a>`;
+  $("#foot").innerHTML = `tikwm ${S.tikwm.length ? "online" : "offline"} · ${S.pool.length} saved clips · ${S.proxitok.length} ProxiTok · ${S.pipedStreams.length + S.invidiousStreams.length} YouTube players<br><a href="https://github.com/Pallockpro/bruh">Source on GitHub</a>`;
 }
 function isDark() {
   const t = document.documentElement.dataset.theme;
@@ -513,7 +550,10 @@ async function explore(token, q) {
     <h2>${q ? `Results for “${esc(q)}”` : "Explore"}</h2>
     <div class="tags">${TAGS.map((t) => `<a href="#/explore/${t}">#${t}</a>`).join("")}</div>
     <div id="res"><div class="empty">${q ? "Searching…" : "Pick a tag or search above."}</div></div></div>`;
-  if (!q) {
+  if (!q && mode() === "tiktok" && S.pool.length) {
+    q = "_pool";
+    $(".explore h2").textContent = "Popular right now";
+  } else if (!q) {
     q = TAGS[Math.floor(Math.random() * TAGS.length)];
     $(".explore h2").textContent = `Explore: #${q}`;
   }
@@ -555,7 +595,11 @@ async function userPage(token, name) {
     $("#res").innerHTML = r.items.length ? grid(r.items, "@" + name) : `<div class="empty">No videos.</div>`;
     if (r.items[0]) $(".explore h2").insertAdjacentHTML("afterbegin", avatar(r.items[0].author, r.items[0].avatar).replace('class="av"', 'class="av" style="width:56px;height:56px;display:inline-grid;vertical-align:middle;margin-right:12px"'));
   } catch {
-    if (token === S.route) $("#res").innerHTML = `<div class="empty">Couldn't load this account.</div>`;
+    if (token !== S.route) return;
+    const mine = S.pool.filter((i) => (i.user || "").toLowerCase() === name.toLowerCase());
+    S.cache[`${mode()}:@${name}`] = { list: mine, more: null };
+    $("#res").innerHTML = (mine.length ? grid(mine, "@" + name) : "") +
+      `<h2 style="margin-top:24px">From TikTok</h2><iframe class="profile" src="https://www.tiktok.com/embed/@${encodeURIComponent(name)}" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; fullscreen"></iframe>`;
   }
 }
 
@@ -614,8 +658,11 @@ $("#find").onsubmit = async (e) => {
 (async () => {
   try {
     const d = await getJSON("../instances.json", 6000);
-    for (const k of ["piped", "invidious", "pipedFrontends", "invidiousEmbed", "ytFrontends", "proxitok", "tikwm"]) S[k] = d[k] || [];
+    for (const k of ["piped", "invidious", "pipedStreams", "invidiousStreams", "pipedFrontends", "invidiousEmbed", "ytFrontends", "ytChallenge", "proxitok", "tikwm"]) S[k] = d[k] || [];
+    if (!d.pipedStreams) S.pipedStreams = S.piped;
+    if (!d.invidiousStreams) S.invidiousStreams = S.invidious;
   } catch {}
+  try { S.pool = ((await getJSON("feed.json", 6000)).items || []).map(fromPool); } catch {}
   addEventListener("hashchange", route);
   route();
 })();

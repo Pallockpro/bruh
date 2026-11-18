@@ -41,7 +41,7 @@ const ICON = {
   open: P('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
 };
 
-const S = { piped: [], invidious: [], pipedFrontends: [], invidiousEmbed: [], ytFrontends: [], route: 0, cleanup: null };
+const S = { piped: [], invidious: [], pipedStreams: [], invidiousStreams: [], pipedFrontends: [], invidiousEmbed: [], ytFrontends: [], ytChallenge: [], route: 0, cleanup: null };
 const $ = (sel, root = document) => root.querySelector(sel);
 const view = $("#view");
 
@@ -392,16 +392,18 @@ function channel(token, id) {
 
 function buildSources(id) {
   const out = [];
-  for (const b of S.piped) out.push({ group: "Plays here (proxied)", kind: "piped", base: b, label: `Piped API: ${host(b)}` });
-  for (const b of S.invidious) out.push({ group: "Plays here (proxied)", kind: "invidious", base: b, label: `Invidious API: ${host(b)}` });
+  // Only servers the updater saw actually play a video.
+  for (const b of S.pipedStreams) out.push({ group: "Plays here (proxied)", kind: "piped", base: b, label: `Piped API: ${host(b)}` });
+  for (const b of S.invidiousStreams) out.push({ group: "Plays here (proxied)", kind: "invidious", base: b, label: `Invidious API: ${host(b)}` });
   out.push(
     { group: "YouTube players", kind: "embed", label: "YouTube (no-cookie)", url: `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0` },
     { group: "YouTube players", kind: "embed", label: "YouTube (standard)", url: `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` },
   );
   for (const f of S.pipedFrontends) out.push({ group: "Piped players", kind: "embed", label: `Piped: ${host(f)}`, url: `${f}/embed/${id}?autoplay=1` });
-  for (const b of new Set([...S.invidiousEmbed, ...S.invidious]))
+  for (const b of S.invidiousEmbed)
     out.push({ group: "Invidious players", kind: "embed", label: `Invidious: ${host(b)}`, url: `${b}/embed/${id}?autoplay=1&local=true` });
   for (const f of S.ytFrontends) out.push({ group: "Other front-ends", kind: "embed", label: host(f), url: `${f}/watch?v=${id}` });
+  for (const f of S.ytChallenge) out.push({ group: "May ask you to verify first", kind: "embed", label: host(f), url: `${f}/${/invidious|inv\.|yewtu/.test(f) ? "embed/" + id : "watch?v=" + id}` });
   return out;
 }
 
@@ -543,7 +545,7 @@ function watch(token, id) {
       if (d.mp4) video.src = d.mp4;
       else if (d.hls) await useHls(d.hls);
       else throw new Error("no stream");
-      stallTimer = setTimeout(() => video.readyState < 2 && next("too slow"), 15000);
+      stallTimer = setTimeout(() => video.readyState < 2 && next("too slow"), 10000);
     } catch (e) {
       if (current === i) next(e.message === "no stream" ? "no playable stream" : "server didn't answer");
     }
@@ -677,6 +679,9 @@ $("#search").onsubmit = (e) => {
     S.pipedFrontends = d.pipedFrontends || [];
     S.invidiousEmbed = d.invidiousEmbed || [];
     S.ytFrontends = d.ytFrontends || [];
+    S.ytChallenge = d.ytChallenge || [];
+    S.pipedStreams = d.pipedStreams || d.piped || [];
+    S.invidiousStreams = d.invidiousStreams || d.invidious || [];
     S.updated = d.updated;
   } catch {}
   addEventListener("hashchange", route);

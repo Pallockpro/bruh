@@ -27,11 +27,12 @@ jobs:
       - run: node scripts/update-instances.mjs
       - name: Commit changes
         run: |
-          if git diff --quiet -- instances.json; then
+          git add -N bruhtok/feed.json 2>/dev/null || true
+          if git diff --quiet -- instances.json bruhtok/feed.json; then
             echo "No changes"; exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add instances.json
-          git commit -m "Auto-update working instances"
+          git add instances.json bruhtok/feed.json
+          git commit -m "Auto-update working servers and bruhtok clips"
           git push

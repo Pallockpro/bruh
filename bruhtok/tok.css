@@ -171,6 +171,7 @@ main { position: fixed; inset: 0 0 0 240px; overflow: hidden; }
 .tcard .tt { margin-top: 6px; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .tcard .tw { margin-top: 2px; font-size: 13px; color: var(--fg2); }
 .empty { color: var(--fg2); padding: 40px 0; }
+.profile { display: block; width: 100%; max-width: 420px; height: 760px; border: 0; border-radius: 12px; background: var(--soft); }
 .prose { max-width: 720px; line-height: 1.6; }
 .prose a { color: var(--accent); }
 .prose td, .prose th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
