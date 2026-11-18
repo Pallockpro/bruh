@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>bruhtok</title>
+<link rel="stylesheet" href="tok.css">
+<script>
+  try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>
+</head>
+<body>
+<aside class="nav">
+  <a class="logo" href="#/"><span class="logo-mark">b</span>bruhtok</a>
+  <form class="find" id="find" role="search">
+    <input id="q" placeholder="Search or paste a TikTok/YouTube link" autocomplete="off" spellcheck="false">
+    <button aria-label="Search" id="go"></button>
+  </form>
+  <nav id="links"></nav>
+  <div class="nav-foot" id="foot"></div>
+</aside>
+
+<div class="topbar">
+  <div class="tabs" id="tabs"></div>
+  <a class="tb-btn" href="#/explore" id="tbsearch" aria-label="Explore"></a>
+</div>
+
+<main id="view"></main>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-card">
+    <div class="sheet-h"><b>Play from</b><button id="sheetx" aria-label="Close"></button></div>
+    <div id="sheetlist"></div>
+  </div>
+</div>
+
+<script src="tok.js"></script>
+</body>
+</html>

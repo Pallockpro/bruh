@@ -2,6 +2,9 @@
 //   piped / invidious      - API servers that answer searches and allow browser (CORS) requests
 //   pipedFrontends         - Piped websites whose /embed/ player loads and may be framed
 //   invidiousEmbed         - Invidious servers whose /embed/ player loads and may be framed
+//   ytFrontends            - other YouTube front-ends (Poketube, CloudTube, ViewTube) whose watch page may be framed
+//   proxitok               - ProxiTok (TikTok front-end) servers whose video page loads and may be framed
+//   tikwm                  - tikwm API hosts that answer TikTok searches with CORS (used by /bruhtok)
 // Run by .github/workflows/update.yml on a schedule.
 import { readFile, writeFile } from "node:fs/promises";
 
@@ -29,7 +32,15 @@ const PIPED_FRONTENDS = [
   "https://piped.ducks.party", "https://piped.private.coffee", "https://piped.video", "https://cf.piped.video", "https://vc.piped.video", "https://re.piped.video",
   "https://fl.piped.video", "https://do.piped.video", "https://nf.piped.video", "https://az.piped.video",
 ];
-const TEST_ID = "jNQXAC9IVRw"; // "Me at the zoo", the first YouTube video
+const TEST_ID = "jNQXAC9IVRw";
+const TEST_TIKTOK = "6718335390845095173"; // @scout2015, TikTok's own docs example
+const PROXITOK_LIST = "https://raw.githubusercontent.com/pablouser1/ProxiTok/master/instances.json";
+const POKE_LISTS = [
+  "https://codeberg.org/ashley/poke/raw/branch/main/instances.json",
+  "https://raw.githubusercontent.com/ashley0143/poke/main/instances.json",
+];
+const YT_FRONTENDS = ["https://poketube.fun", "https://tube.cadence.moe", "https://viewtube.io"];
+const TIKWM = ["https://www.tikwm.com", "https://tikwm.com"]; // "Me at the zoo", the first YouTube video
 
 const clean = (u) => u.trim().replace(/\/+$/, "");
 
@@ -107,6 +118,49 @@ async function embedWorks(base, kind) {
   }
 }
 
+// Generic "does this page load and allow framing" check, with a required marker in the HTML.
+async function pageWorks(base, path, marker) {
+  try {
+    const res = await fetch(base + path, {
+      signal: AbortSignal.timeout(15000),
+      headers: { "user-agent": "Mozilla/5.0 (bruhtube instance checker)" },
+    });
+    if (!res.ok || !frameable(res.headers)) return null;
+    const html = (await res.text()).toLowerCase();
+    return marker.test(html) ? base : null;
+  } catch {
+    return null;
+  }
+}
+
+async function refreshPages(name, candidates, old, path, marker, max = 15) {
+  candidates = [...new Set([...candidates, ...old].map(clean))];
+  const good = (await Promise.all(candidates.map((c) => pageWorks(c, path, marker)))).filter(Boolean).slice(0, max);
+  console.log(`${name}: ${good.length}/${candidates.length} working`, good);
+  return good.length ? good : old;
+}
+
+async function urlsFrom(url) {
+  try {
+    const text = (await get(url, "text")).body;
+    return [...text.matchAll(/https:\/\/[a-z0-9.-]+\.[a-z]{2,}/gi)].map((m) => m[0])
+      .filter((u) => !/github|codeberg|gitlab|sudovanilla\.org\/korbs/i.test(u));
+  } catch (e) {
+    console.warn("list", url, e.message);
+    return [];
+  }
+}
+
+async function tikwmWorks(base) {
+  try {
+    const { body, cors } = await get(`${base}/api/feed/search?keywords=cat&count=3&cursor=0`);
+    const list = Array.isArray(body.data) ? body.data : body.data?.videos || [];
+    return cors && body.code === 0 && list.length ? base : null;
+  } catch {
+    return null;
+  }
+}
+
 // Guess Piped website URLs from API URLs: pipedapi.example.com -> piped.example.com
 function frontendGuesses(apis) {
   const out = [];
@@ -140,6 +194,22 @@ next.pipedFrontends = await refreshEmbeds("piped",
   [...PIPED_FRONTENDS, ...frontendGuesses([...pipedApiCandidates, ...next.piped])], old.pipedFrontends || []);
 next.invidiousEmbed = await refreshEmbeds("invidious",
   [...invCandidates, ...next.invidious, "https://invidious.ducks.party"], old.invidiousEmbed || []);
+
+// ----- extra YouTube front-ends (watch page in a frame) -----
+const pokeCandidates = (await Promise.all(POKE_LISTS.map(urlsFrom))).flat();
+next.ytFrontends = await refreshPages("yt front-ends", [...YT_FRONTENDS, ...pokeCandidates], old.ytFrontends || [],
+  `/watch?v=${TEST_ID}`, /<video|poke|cloudtube|viewtube|iframe/);
+
+// ----- TikTok -----
+let proxitokCandidates = [];
+try {
+  proxitokCandidates = (await get(PROXITOK_LIST)).body.map((i) => i.clearnet).filter(Boolean);
+} catch (e) { console.warn("proxitok list:", e.message); }
+next.proxitok = await refreshPages("proxitok", proxitokCandidates, old.proxitok || [],
+  `/@scout2015/video/${TEST_TIKTOK}`, /<video/);
+const tikwmOk = (await Promise.all(TIKWM.map(tikwmWorks))).filter(Boolean);
+console.log("tikwm:", tikwmOk);
+next.tikwm = tikwmOk.length ? tikwmOk : (old.tikwm || []);
 
 const same = (a, b) => [...a].sort().join() === [...(b || [])].sort().join();
 if (Object.keys(next).every((k) => same(next[k], old[k]))) {

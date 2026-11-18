@@ -20,5 +20,18 @@
     "https://invidious.ducks.party",
     "https://inv.nadeko.net",
     "https://yewtu.be"
+  ],
+  "ytFrontends": [
+    "https://poketube.fun",
+    "https://tube.cadence.moe",
+    "https://viewtube.io"
+  ],
+  "proxitok": [
+    "https://proxitok.pabloferreiro.es",
+    "https://proxitok.pussthecat.org",
+    "https://proxitok.privacydev.net"
+  ],
+  "tikwm": [
+    "https://www.tikwm.com"
   ]
 }

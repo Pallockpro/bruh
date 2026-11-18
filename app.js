@@ -37,10 +37,11 @@ const ICON = {
   share: P('<path d="M14 5l6 6-6 6v-3.5c-5 0-8 1.5-10 5 .5-5.5 3.5-9.5 10-10.5z"/>'),
   skip: P('<path d="M5 5l9 7-9 7zM18 5v14"/>'),
   next: P('<path d="M9 6l6 6-6 6"/>'),
+  tok: P('<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="m10.5 9 4 3-4 3z"/>'),
   open: P('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
 };
 
-const S = { piped: [], invidious: [], pipedFrontends: [], invidiousEmbed: [], route: 0, cleanup: null };
+const S = { piped: [], invidious: [], pipedFrontends: [], invidiousEmbed: [], ytFrontends: [], route: 0, cleanup: null };
 const $ = (sel, root = document) => root.querySelector(sel);
 const view = $("#view");
 
@@ -279,6 +280,7 @@ function sidebar(active) {
     item("#/", "home", "Home", "home"),
     item("#/trending", "fire", "Trending", "trending"),
     item("#/history", "clock", "History", "history"),
+    item("bruhtok/", "tok", "BruhTok", "tok"),
     `<div class="full"><hr><h4>Explore</h4></div>`,
     `<div class="full">${CATEGORIES.map((c) => item(`#/c/${c.slug}`, c.icon, c.name, c.slug)).join("")}</div>`,
     `<div class="full"><hr></div>`,
@@ -399,6 +401,7 @@ function buildSources(id) {
   for (const f of S.pipedFrontends) out.push({ group: "Piped players", kind: "embed", label: `Piped: ${host(f)}`, url: `${f}/embed/${id}?autoplay=1` });
   for (const b of new Set([...S.invidiousEmbed, ...S.invidious]))
     out.push({ group: "Invidious players", kind: "embed", label: `Invidious: ${host(b)}`, url: `${b}/embed/${id}?autoplay=1&local=true` });
+  for (const f of S.ytFrontends) out.push({ group: "Other front-ends", kind: "embed", label: host(f), url: `${f}/watch?v=${id}` });
   return out;
 }
 
@@ -593,7 +596,9 @@ function about() {
     <li><b>YouTube players</b>: YouTube's own embedded player, with and without cookies.</li>
     <li><b>Piped players</b>: piped.video and its mirrors, each with its own embedded player.</li>
     <li><b>Invidious players</b>: each Invidious server's embedded player, streaming through that server.</li>
+    <li><b>Other front-ends</b>: Poketube, CloudTube and ViewTube servers that allow being shown inside another site.</li>
   </ul>
+  <p>For short vertical videos, try <a href="bruhtok/">bruhtok</a>: a swipeable feed of TikToks and YouTube Shorts.</p>
   <p>Use the arrow button next to the menu to jump to the next source, or the open button to try that source in its own tab.</p>
   <p>Every 6 hours a GitHub Action re-checks all the public server lists, keeps the ones that answer (and that allow being embedded), and commits them to <code>instances.json</code>.</p>
 
@@ -606,6 +611,10 @@ function about() {
   <p>A desktop app for Windows, Mac and Linux. It talks to YouTube directly using YouTube.js, or to Invidious as a fallback. Subscriptions are stored on your computer.</p>
   <h3>NewPipe and LibreTube</h3>
   <p>Android apps. NewPipe pulls streams on the phone itself. LibreTube runs on the Piped API.</p>
+  <h3>Poketube, CloudTube, ViewTube</h3>
+  <p>Smaller YouTube front-ends. Poketube is written in Node and proxies video; CloudTube is a lightweight front-end that uses Invidious behind the scenes; ViewTube is a Nuxt app with its own player. Working servers show up under “Other front-ends”.</p>
+  <h3>ProxiTok and tikwm (for TikTok)</h3>
+  <p>ProxiTok is an open-source TikTok front-end that streams clips through its own server. tikwm is a public API that returns TikTok feeds, search results and watermark-free video files. bruhtok uses both.</p>
   <h3>Materialious</h3>
   <p>A Material-style client for Invidious. It doesn't support embeds, so it isn't in the source list.</p>
   <h3>Plain web proxies</h3>
@@ -667,6 +676,7 @@ $("#search").onsubmit = (e) => {
     S.invidious = d.invidious || d.instances || [];
     S.pipedFrontends = d.pipedFrontends || [];
     S.invidiousEmbed = d.invidiousEmbed || [];
+    S.ytFrontends = d.ytFrontends || [];
     S.updated = d.updated;
   } catch {}
   addEventListener("hashchange", route);
