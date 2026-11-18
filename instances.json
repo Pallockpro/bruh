@@ -1,6 +1,13 @@
 {
   "updated": null,
-  "instances": [
+  "piped": [
+    "https://pipedapi.kavin.rocks",
+    "https://pipedapi.leptons.xyz",
+    "https://pipedapi.nosebs.ru",
+    "https://pipedapi-libre.kavin.rocks",
+    "https://piped-api.privacy.com.de"
+  ],
+  "invidious": [
     "https://inv.nadeko.net",
     "https://yewtu.be",
     "https://invidious.nerdvpn.de",
